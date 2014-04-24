@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-3">
+            {% if session.logged_in %}
+                {{ session.username }}
+
+                <form action="{{ url_for('add_entry') }}" method="post" class="add-entry">
+                    <dl>
+                        <dd><textarea id="compose_tweet" name="tweet" maxlength="140"></textarea>
+                        <dd><input class="btn btn-lg btn-primary" type="submit" value="Tweet">
+                    </dl>
+                </form>
+            {% endif %}
+        </div>
+        <div class="col-md-9">
+            {% for tweet in tweets %}
+                <div class="tweet">
+                  <span class="username">{{ tweet.user_id }}</span> {{ tweet.time | datetime_format }}
+                  <br>
+                  {{ tweet.text }}
+                </div>
+            {% else %}
+                No tweets. :(
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}

@@ -9,6 +9,7 @@ create table users (
 );
 create table tweets (
   id integer primary key autoincrement,
-  title text not null,
-  text text not null
+  text text not null,
+  user_id text,
+  time integer
 );

@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-3">
+            
+        </div>
+        <div class="col-md-9">
+            <span class="username">{{ username }}'s Timeline:</span>
+            {% for tweet in tweets %}
+                <div class="tweet">
+                  <span class="username">{{ username }}</span> {{ tweet.time | datetime_format }}
+                  <br>
+                  {{ tweet.text }}
+                </div>
+            {% else %}
+                No tweets. :(
+            {% endfor %}
+        </div>
+    </div>
+
+{% endblock %}

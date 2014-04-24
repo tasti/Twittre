@@ -1,0 +1,72 @@
+body {
+  padding-top: 50px;
+  background-color: #f5f8fa;
+  font-family: Verdana;
+}
+
+.main {
+  padding: 40px 15px;
+}
+
+.dialog {
+    margin: auto;
+    width: 30%;
+}
+
+.error { 
+    background: #f0d6d6;
+    padding: 0.5em;
+    border-radius: 3px;
+}
+
+input {
+    font-size: 24px;
+}
+
+input[type="submit"] {
+     display: block;
+     margin : 0 auto;
+}
+
+#compose_tweet {
+    width: 250px;
+    height: 100px;
+    border-radius: 5px;
+}
+
+.tweet {
+    background-color: #ccd6dd;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 10px;
+}
+
+.tweet:hover {
+    background-color: #e1e8ed;
+}
+
+.username {
+    font-size: 24px;
+}
+
+.navbar-inverse {
+  background-color: #55acee;
+  border-color: #080808;
+}
+
+.navbar-inverse .navbar-brand {
+  color: #f5f8fa;
+  font-family: 'Days One', 'sans-serif';
+  font-size: 32px;
+}
+
+.navbar-inverse .navbar-nav > li > a {
+  color: #f5f8fa;
+}
+
+.navbar-inverse .navbar-nav > .active > a,
+.navbar-inverse .navbar-nav > .active > a:hover,
+.navbar-inverse .navbar-nav > .active > a:focus {
+  color: #f5f8fa;
+  background-color: #66757f;
+}
