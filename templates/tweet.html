@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block body %}
+
+    <div class="row">
+        <div class="col-md-3">
+            
+        </div>
+        <div class="col-md-9">
+            <span class="username">Tweet #{{ tweet.id }}</span>
+                <div class="tweet">
+                  <a href="/{{ tweet.user_id }}" style="color: black; text-decoration: none;"><span class="username">{{ tweet.user_id }}</span></a> {{ tweet.time | datetime_format }}
+                  <br>
+                  {{ tweet.text | inject_hash_tag }}
+                </div>
+        </div>
+    </div>
+
+{% endblock %}

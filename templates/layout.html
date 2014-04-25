@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../assets/ico/favicon.ico">
 
-    <title>Twittre</title>
+    <title>{{ title }} - Twittre</title>
 
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
@@ -47,6 +47,9 @@
                 <li><a href="{{ url_for('register') }}">Register</a></li>
             {% else %}
                 <!--li class="active"><a href="#">{{ session.username }}</a></li-->
+                {% if session.admin %}
+                  <li><a href="{{ url_for('admin') }}">Admin Console</a></li>
+                {% endif %}
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
             {% endif %}
           </ul>

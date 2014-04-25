@@ -16,11 +16,13 @@
         </div>
         <div class="col-md-9">
             {% for tweet in tweets %}
-                <div class="tweet">
-                  <span class="username">{{ tweet.user_id }}</span> {{ tweet.time | datetime_format }}
-                  <br>
-                  {{ tweet.text }}
-                </div>
+                <a href="/tweet/{{ tweet.id }}" style="color: black; text-decoration: none;">
+                    <div class="tweet">
+                      <span class="username">{{ tweet.user_id }}</span> {{ tweet.time | datetime_format }}
+                      <br>
+                      {{ tweet.text | inject_hash_tag }}
+                    </div>
+                </a>
             {% else %}
                 No tweets. :(
             {% endfor %}
