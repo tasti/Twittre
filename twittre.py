@@ -3,6 +3,7 @@ import sqlite3
 import sys
 import time
 import calendar
+import hashlib
 from datetime import datetime
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash, Markup
 
@@ -58,7 +59,7 @@ def close_db(error):
 def getSafeTweet(tweet):
     safeTweet = str(Markup.escape(tweet))
     injectedTweet = ''
-    
+
     # Inject <a href> for hashtags
     HASH_TAG_STATE = 1
     IGNORE_NEXT_STATE = 2
@@ -67,7 +68,7 @@ def getSafeTweet(tweet):
     for c in safeTweet:
         if state == HASH_TAG_STATE:
             if (c < 'A' or c > 'Z') and (c < 'a' or c > 'z') and (c < '0' or c > '9'):
-                injectedTweet += '<a href="/hash/%s">#%s</a>%s' % (hashTagText.lower(), hashTagText, c)
+                injectedTweet += '<a href="/hashtag/%s">#%s</a>%s' % (hashTagText.lower(), hashTagText, c)
                 state = 0
             else:
                 hashTagText += c
@@ -86,7 +87,7 @@ def getSafeTweet(tweet):
 
     # Close hash if still in hashTagState
     if state == HASH_TAG_STATE:
-        injectedTweet += '<a href="/hash/%s">#%s</a>' % (hashTagText.lower(), hashTagText)
+        injectedTweet += '<a href="/hashtag/%s">#%s</a>' % (hashTagText.lower(), hashTagText)
         state = 0
 
     return Markup(injectedTweet)
@@ -128,9 +129,10 @@ def login():
             user = query_db('select * from users where username_lower = ?', [username], one=True)
 
             # Check for valid username and password
+            # Usually, you shouldn't notify the user the specific input that's invalid
             if user is None:
                 error = 'Invalid username'
-            elif password != user['password']:
+            elif hashlib.sha512(password).hexdigest() != user['password']:
                 error = 'Invalid password'
             else:
                 session['logged_in'] = True
@@ -182,8 +184,10 @@ def register():
                         if password != password2:
                             error = 'Passwords do not match'
                         else:
+                            hashPassword = hashlib.sha512(password).hexdigest()
+
                             db = get_db()
-                            db.execute('insert into users (username, username_lower, password, admin) values (?, ?, ?, ?)', [username, username_lower, password, 0])
+                            db.execute('insert into users (username, username_lower, password, admin) values (?, ?, ?, ?)', [username, username_lower, hashPassword, 0])
                             db.commit()
 
                             session['logged_in'] = True
@@ -230,13 +234,17 @@ def tweet(tweet_id):
 
 @app.route('/hashtag/<hashtag>', methods=['GET'])
 def hashTag(hashtag):
-    tweet = query_db('select * from tweets where id = ?', [tweet_id], one=True)
+    db = get_db()
+    cur = db.execute('select * from tweets order by id desc')
+    tweets = cur.fetchall()
 
-    # Display tweet if valid tweet
-    if tweet is None:
-        return redirect(url_for('index'))
-    else:
-        return render_template('tweet.html', tweet=tweet, title="Tweet #%d" % tweet_id)
+    # Only append tweets that contain the given hashtag
+    tweetsWithHashTag = []
+    for tweet in tweets:
+        if tweet['text'].lower().find('#%s' % hashtag) != -1:
+            tweetsWithHashTag.append(tweet)
+
+    return render_template('hashtag.html', tweets=tweetsWithHashTag, hashtag=hashtag, title="#%s" % hashtag)
 
 @app.route('/adminconsole')
 def admin():
@@ -259,6 +267,11 @@ def formatTime(millis):
 @app.before_first_request
 def initialize():
     app.logger.debug('Initializing...')
+
+    db = get_db()
+    db.execute('update users set password=? where username_lower=?', [hashlib.sha512("name").hexdigest(), "username"])
+    db.commit()
+
 
     # Initialize database
     if len(sys.argv) > 1 and sys.argv[1] == "reset":
