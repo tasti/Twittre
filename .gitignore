@@ -1,3 +1,4 @@
 secret.txt
 twittre.db
 venv
+*.pyc

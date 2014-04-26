@@ -13,6 +13,15 @@
                     </dl>
                 </form>
             {% endif %}
+
+            <span class="username">Trending:</span>
+            <br>
+            {% for hashTag in trending %}
+                <a href="/hashtag/{{ hashTag[0] }}">#{{ hashTag[0] }}</a>
+                <br>
+            {% else %}
+                No trends. :(
+            {% endfor %}
         </div>
         <div class="col-md-9">
             {% for tweet in tweets %}

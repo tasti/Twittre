@@ -92,12 +92,56 @@ def getSafeTweet(tweet):
 
     return Markup(injectedTweet)
 
+def findFirstNonAlphaNum(st, start):
+    n = len(st)
+
+    for i in range(start, n):
+        c = st[i]
+
+        if (c < 'A' or c > 'Z') and (c < 'a' or c > 'z') and (c < '0' or c > '9'):
+            return i
+
+    return n
+
+def trending():
+    db = get_db()
+    cur = db.execute('select text, time from tweets')
+    tweets = cur.fetchall()
+
+    # Go through tweets and extract hashtags
+    hashTags = []
+    for tweet in tweets:
+        hashTweets = map(lambda x: x[:findFirstNonAlphaNum(x, 1)], map(lambda x: x[x.find('#'):], filter(lambda x: x.find('#') != -1, tweet['text'].split())))
+        hashTags += hashTweets
+
+    hashTags = map(lambda x: x[1:].lower(), hashTags)
+    hashTags.sort()
+    hashTags = map(lambda x: [x, 1], hashTags) # Insert occurence of hashtag amount
+    n = len(hashTags)
+    x = 0
+    y = 0
+
+    # Find common hashes and keep track of their occurence
+    while x < n and y+1 < n:
+        y += 1
+        
+        if hashTags[x][0] == hashTags[y][0]:
+            hashTags[x][1] += hashTags[y][1]
+            hashTags[y][1] = 0
+        else:
+            x = y
+
+    hashTags = filter(lambda x: x[1] != 0, hashTags) # Remove duplicates
+    hashTags.sort(key=lambda x: x[1], reverse=True)
+
+    return hashTags
+
 @app.route('/')
 def index():
     db = get_db()
     cur = db.execute('select id, text, user_id, time from tweets order by id desc')
     tweets = cur.fetchall()
-    return render_template('index.html', tweets=tweets, title="Home")
+    return render_template('index.html', tweets=tweets, title="Home", trending=trending())
 
 @app.route('/add', methods=['POST'])
 def add_entry():
@@ -132,7 +176,7 @@ def login():
             # Usually, you shouldn't notify the user the specific input that's invalid
             if user is None:
                 error = 'Invalid username'
-            elif hashlib.sha512(password).hexdigest() != user['password']:
+            elif hashlib.sha512(password + user['salt']).hexdigest() != user['password']:
                 error = 'Invalid password'
             else:
                 session['logged_in'] = True
@@ -184,10 +228,11 @@ def register():
                         if password != password2:
                             error = 'Passwords do not match'
                         else:
-                            hashPassword = hashlib.sha512(password).hexdigest()
+                            salt = os.urandom(64).encode('hex')
+                            hashPassword = hashlib.sha512(password + salt).hexdigest()
 
                             db = get_db()
-                            db.execute('insert into users (username, username_lower, password, admin) values (?, ?, ?, ?)', [username, username_lower, hashPassword, 0])
+                            db.execute('insert into users (username, username_lower, password, salt, admin) values (?, ?, ?, ?, ?)', [username, username_lower, hashPassword, salt, 0])
                             db.commit()
 
                             session['logged_in'] = True
@@ -268,18 +313,16 @@ def formatTime(millis):
 def initialize():
     app.logger.debug('Initializing...')
 
-    db = get_db()
-    db.execute('update users set password=? where username_lower=?', [hashlib.sha512("name").hexdigest(), "username"])
-    db.commit()
-
-
     # Initialize database
     if len(sys.argv) > 1 and sys.argv[1] == "reset":
         init_db()
 
+        salt = os.urandom(64).encode('hex')
+        hashPassword = hashlib.sha512(admin_password + salt).hexdigest()
+
         # Initialize administrator
         db = get_db()
-        db.execute('insert into users (username, username_lower, password, admin) values (?, ?, ?, ?)', [admin_username, admin_username.lower(), admin_password, 1])
+        db.execute('insert into users (username, username_lower, password, salt, admin) values (?, ?, ?, ?, ?)', [admin_username, admin_username.lower(), hashPassword, salt, 1])
         db.commit()
 
         app.logger.debug('Database has been initialized.')

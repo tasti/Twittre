@@ -5,6 +5,7 @@ create table users (
   username text not null,
   username_lower text not null,
   password text not null,
+  salt text not null,
   admin integer
 );
 create table tweets (
